@@ -1,93 +1,108 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # define the system of ODEs where 
 # x' = f(x, y)
 # y' = g(x, y)
 
-def f(x, y):
-    return x*(4-y-x**2)
 
-def g(x, y):
-    return y*(x-1)
+class VectorField:
 
-# define the grid
-x = np.linspace(-3, 3, 30)
-y = np.linspace(-3, 5, 30)
+    vf = None
 
-# create the grid
-X, Y = np.meshgrid(x, y)
 
-# compute the vector field
-u = f(X, Y)
-v = g(X, Y)
+    def plot_vector_field_2d(self, x_min, x_max, y_min, y_max, x_step, y_step, show = False):
+        # define the grid
+        x = np.linspace(x_min, x_max, x_step)
+        y = np.linspace(y_min, y_max, y_step)
 
-# for plotting, make all arrows the same length
-norm = np.sqrt(u**2 + v**2)
-u = u/norm
-v = v/norm
+        # create the grid
+        X, Y = np.meshgrid(x, y)
 
-def particle_sim(x_0, y_0):
-    # simulate a particle moving in the vector field
-    # start at [x_0, y_0]
+        # compute the vector field
+        u = self.f(X, Y)
+        v = self.g(X, Y)
+        
 
-    # define the time step
-    dt = 0.001
+        # for plotting, make all arrows the same length
+        norm = np.sqrt(u**2 + v**2)
+        u = u/norm
+        v = v/norm
 
-    # define the number of steps
-    n_steps = 20000
+        fig = plt.figure(figsize=(10,10))
+        # background black 
+        plt.gca().set_facecolor('black')
+        plt.quiver(X, Y, u, v, color='green')
+        
+        if show:
+            plt.show()
 
-    # create the arrays to store the positions
-    x = np.zeros(n_steps)
-    y = np.zeros(n_steps)
+        self.vf = fig
 
-    # set the initial position
-    x[0] = x_0
-    y[0] = y_0
+  
+    def particle_sim(self, x_0, y_0, dt, n_steps):
+        # simulate a particle moving in the vector field
+        # start at [x_0, y_0]
 
-    # loop over the steps
-    for i in range(n_steps-1):
-        # compute the next position
-        x[i+1] = x[i] + dt*f(x[i], y[i])
-        y[i+1] = y[i] + dt*g(x[i], y[i])
+        # create the arrays to store the positions
+        x = np.zeros(n_steps)
+        y = np.zeros(n_steps)
+        
 
-    # assert that the particle stops
-    assert np.abs(x[-1] - x[-2]) < 1e-10 and np.abs(y[-1] - y[-2]) < 1e-10
-    return x, y
+        # set the initial position
+        x[0] = x_0
+        y[0] = y_0
+        
 
-# get a bunch of points near (1,1)
-x_0s = np.random.normal(1, 0.2, 50)
-y_0s = np.random.normal(1, 0.2, 50)
+        # loop over the steps
+        for i in range(n_steps-1):
+            # compute the next position
+            x[i+1] = x[i] + dt*self.f(x[i], y[i])
+            y[i+1] = y[i] + dt*self.g(x[i], y[i])
+            
 
-# get a bunch of points near (2,2)
-x_0s = np.append(x_0s, np.random.normal(2, 0.2, 50))
-y_0s = np.append(y_0s, np.random.normal(2, 0.2, 50))
-
-plots = []
-for x_0, y_0 in zip(x_0s, y_0s):
-    x, y = particle_sim(x_0, y_0)
-    plots.append([x, y])
-
-plt.figure(figsize=(10,10))
+        # assert that the particle stops
+        assert np.abs(x[-1] - x[-2]) < 1e-10 and np.abs(y[-1] - y[-2]) < 1e-10
+        return x, y
     
+    def plot_particle_sim(self, startx, starty, dt, n_steps):
+        x_0s = np.random.normal(startx, 0.5, 100)
+        y_0s = np.random.normal(starty, 0.5, 100)
 
-for plot in plots:
-    plt.plot(plot[0], plot[1], 'k', alpha=0.3)
-plt.grid()
+        fig = plt.figure(self.vf)
 
-# make the back of teh image white
-plt.gca().set_facecolor('white')
+        # make the arrows green
 
 
-# plot the vector field
-plt.quiver(X, Y, u, v)
+        for x_0, y_0 in zip(x_0s, y_0s):
+            x, y = self.particle_sim(x_0, y_0, dt, n_steps)
 
-# plot [0,0], [1,3], [2,0], [-2,0]
-plt.plot(0,0, 'ro')
-plt.plot(1,3, 'ro')
-plt.plot(2,0, 'ro')
-plt.plot(-2,0, 'ro')
+            plt.plot(x, y, linewidth=0.5, color = 'red', alpha = 1)
+     
+        # put x and y axes 
+        plt.axhline(0, color='white')
+        plt.axvline(0, color='white')
 
-# plot the trajectory
+        plt.show()
 
-plt.show()
+
+
+
+    def f(self,x, y):
+        return x*(4-y-x**2)
+
+    def g(self, x, y):
+        return y*(x-1)
+
+
+def main():
+    # define the vector field
+
+
+    vf = VectorField()
+    vf.plot_vector_field_2d(-5, 5, -5, 5, 30, 30)
+    vf.plot_particle_sim(1, 2, 0.01, 10000)
+
+
+main()
